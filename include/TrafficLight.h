@@ -2,7 +2,7 @@
 #define TRAFFICLIGHT_H
 
 #include <condition_variable>
-#include <deque>
+#include <queue>
 #include <future>
 #include <memory>
 #include <mutex>
@@ -21,10 +21,10 @@ class MessageQueue {
  private:
   std::mutex _mutex;
   std::condition_variable _cond;
-  std::deque<T> _messages;
+  std::queue<T> _messages;
 };
 
-enum TrafficLightPhase {
+enum class TrafficLightPhase {
   red,
   green,
 };

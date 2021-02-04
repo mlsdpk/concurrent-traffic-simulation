@@ -15,7 +15,7 @@ T MessageQueue<T>::receive() {
 
   // remove last vector element from queue
   T msg = std::move(_messages.back());
-  _messages.pop_back();
+  _messages.pop();
 
   return msg;  // will not be copied due to return value optimization (RVO) in
                // C++
@@ -27,7 +27,7 @@ void MessageQueue<T>::send(T &&msg) {
   std::lock_guard<std::mutex> uLock(_mutex);
 
   // add vector to queue
-  _messages.push_back(std::move(msg));
+  _messages.push(std::move(msg));
   _cond.notify_one();  // notify client after pushing new Vehicle into vector
 }
 
@@ -47,6 +47,9 @@ void TrafficLight::waitForGreen() {
     if (message == TrafficLightPhase::green) {
       return;
     }
+
+    // sleep at every iteration to reduce CPU usage
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
 }
 
@@ -75,9 +78,6 @@ void TrafficLight::cycleThroughPhases() {
   // init stop watch
   auto lastUpdate = std::chrono::system_clock::now();
   while (true) {
-    // sleep at every iteration to reduce CPU usage
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
     // compute time difference to stop watch
     long timeSinceLastUpdate =
         std::chrono::duration_cast<std::chrono::seconds>(
@@ -96,11 +96,11 @@ void TrafficLight::cycleThroughPhases() {
                      message_queue_, std::move(msg));
       ftr.wait();
 
-      // randomly select the next simulation cycle
-      cycleDuration = distr(eng);
-
       // reset stop watch for next cycle
       lastUpdate = std::chrono::system_clock::now();
     }
+
+    // sleep at every iteration to reduce CPU usage
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
 }
